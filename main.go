@@ -11,10 +11,26 @@ import (
 	"gorm.io/gorm"
 )
 
-type weather_info struct {
+type OpenMeteoResponse struct {
 	gorm.Model
-	Id             uint      `json:"primarykey"`
-	Time           string    `json:"time"`
+	Latitude              float64      `json:"latitude"`
+	Longitude             float64      `json:"longitude"`
+	Generationtime_ms     float64      `json:"generationtime_ms"`
+	Utc_offset_seconds    int          `json:"utc_offset_seconds"`
+	Timezone              string       `json:"timezone"`
+	Timezone_abbreviation string       `json:"timezone_abbrevation"`
+	Elevation             float64      `json:"elevation"`
+	Hourly_units          Hourly_units `json:"hourly_units"`
+	Hourly                Hourly       `json:"hourly"`
+}
+type Hourly_units struct {
+	Time           string `json:"time"`
+	Temperature_3m string `json:"temperature_3m"`
+}
+
+type Hourly struct {
+	//Id             uint      `json:"primarykey"`
+	Time           []string  `json:"time"`
 	Temperature_3m []float64 `json:"temperature_3m"`
 }
 
@@ -48,16 +64,16 @@ func createTable() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("weather_info table created....")
+	fmt.Println(" table created....")
 }
 
 func main() {
 	connectDB()
 	createTable()
 
-	var winfo weather_info
+	var r OpenMeteoResponse
 	resp, err := http.Get("https://api.open-meteo.com/v1/forecast?latitude=11.7117117&longitude=79.3271609&timezone=IST&hourly=temperature_2m&hourly=relativehumidity_2m&hourly=windspeed_10m&hourly=winddirection_10m&hourly=pressure_msl&hourly=soil_temperature_6cm&hourly=visibility&hourly=rain")
-	//err = dbm.create(&winfo).Error
+	//err = dbm.create(&hinfo).Error
 	if err != nil {
 		fmt.Println("error while inserting data:", err)
 		return
@@ -65,11 +81,11 @@ func main() {
 	defer resp.Body.Close()
 
 	decoder := json.NewDecoder(resp.Body)
-	err = decoder.Decode(&winfo)
+	err = decoder.Decode(&r)
 	if err != nil {
 		return
 	}
-	fmt.Println(winfo)
+	fmt.Println(r)
 	return
 
 }
